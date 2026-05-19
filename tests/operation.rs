@@ -1,3 +1,10 @@
+//! Falsifiable witnesses for the [`SemaOperation`] vocabulary and
+//! the [`OperationClass`] classification.
+//!
+//! If a future change drifts the canonical NOTA text shape, the
+//! rkyv archive layout, or the operation-class mapping, exactly one
+//! of these tests breaks and names the variant that drifted.
+
 use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
 use rkyv::rancor::Error as RkyvError;
 use signal_sema::{ArchivedSemaOperation, OperationClass, SemaOperation};
@@ -46,6 +53,19 @@ fn sema_operation_classes_are_explicit() {
     assert_eq!(SemaOperation::Match.class(), OperationClass::Read);
     assert_eq!(SemaOperation::Subscribe.class(), OperationClass::Stream);
     assert_eq!(SemaOperation::Validate.class(), OperationClass::Validation);
+}
+
+#[test]
+fn sema_operation_is_write_matches_class() {
+    for operation in operations() {
+        let class = operation.class();
+        let expected = matches!(class, OperationClass::Write);
+        assert_eq!(
+            operation.is_write(),
+            expected,
+            "is_write disagreed with class for {operation:?} ({class:?})"
+        );
+    }
 }
 
 #[test]
