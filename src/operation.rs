@@ -79,6 +79,24 @@ impl SemaOperation {
     }
 }
 
+/// Projection from a component-local executable command into the
+/// universal Sema operation classification vocabulary.
+///
+/// Component commands keep their executable payloads in their owning
+/// daemon crate. They implement this trait so observer streams can
+/// filter and summarize state effects using the workspace-wide
+/// [`SemaOperation`] classes without making `SemaOperation` carry
+/// executable payloads.
+pub trait ToSemaOperation {
+    fn to_sema_operation(&self) -> SemaOperation;
+}
+
+impl ToSemaOperation for SemaOperation {
+    fn to_sema_operation(&self) -> SemaOperation {
+        *self
+    }
+}
+
 /// The broad class of effect a [`SemaOperation`] has against typed
 /// state. The classes are stable; new Sema operations declare their
 /// class as part of their definition.

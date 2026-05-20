@@ -7,7 +7,7 @@
 
 use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
 use rkyv::rancor::Error as RkyvError;
-use signal_sema::{ArchivedSemaOperation, OperationClass, SemaOperation};
+use signal_sema::{ArchivedSemaOperation, OperationClass, SemaOperation, ToSemaOperation};
 
 const CANONICAL: &str = include_str!("../examples/canonical.nota");
 
@@ -65,6 +65,43 @@ fn sema_operation_is_write_matches_class() {
             expected,
             "is_write disagreed with class for {operation:?} ({class:?})"
         );
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ExampleCommand {
+    Insert,
+    Read,
+    OpenStream,
+}
+
+impl ToSemaOperation for ExampleCommand {
+    fn to_sema_operation(&self) -> SemaOperation {
+        match self {
+            Self::Insert => SemaOperation::Assert,
+            Self::Read => SemaOperation::Match,
+            Self::OpenStream => SemaOperation::Subscribe,
+        }
+    }
+}
+
+#[test]
+fn component_commands_project_to_sema_operation_classes() {
+    let cases = [
+        (ExampleCommand::Insert, SemaOperation::Assert),
+        (ExampleCommand::Read, SemaOperation::Match),
+        (ExampleCommand::OpenStream, SemaOperation::Subscribe),
+    ];
+
+    for (command, operation) in cases {
+        assert_eq!(command.to_sema_operation(), operation);
+    }
+}
+
+#[test]
+fn sema_operation_projects_to_itself() {
+    for operation in operations() {
+        assert_eq!(operation.to_sema_operation(), operation);
     }
 }
 

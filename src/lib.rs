@@ -17,7 +17,7 @@ pub mod operation;
 pub mod pattern;
 
 pub use identity::{ArchivedRevision, ArchivedSlot, Revision, Slot};
-pub use operation::{ArchivedSemaOperation, OperationClass, SemaOperation};
+pub use operation::{ArchivedSemaOperation, OperationClass, SemaOperation, ToSemaOperation};
 pub use pattern::{
     ArchivedBind, ArchivedPatternField, ArchivedWildcard, Bind, PatternField, Wildcard,
 };
