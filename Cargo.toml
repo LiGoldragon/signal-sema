@@ -5,7 +5,7 @@ edition      = "2024"
 rust-version = "1.85"
 license      = "MIT OR Apache-2.0"
 repository   = "https://github.com/LiGoldragon/signal-sema"
-description  = "Sema operation vocabulary for typed database execution."
+description  = "Payloadless Sema operation and outcome classifications for component observation."
 publish      = false
 
 [lib]

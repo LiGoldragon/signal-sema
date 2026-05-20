@@ -1,9 +1,9 @@
-//! Sema execution vocabulary.
+//! Sema classification and observation vocabulary.
 //!
 //! Public component contracts use domain-local operation verbs. This
-//! crate owns the lower database-operation vocabulary that a daemon
-//! lowers into when it asks `sema-engine` to read or change durable
-//! state.
+//! crate owns the payloadless operation and outcome labels that a
+//! daemon projects from its component-local executable commands and
+//! effects.
 //!
 //! See `ARCHITECTURE.md` for the layer position and what the crate
 //! does and does not own. The migration plan that introduced this

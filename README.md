@@ -9,7 +9,7 @@ and Effects into cross-component observer labels.
 
 This crate is part of the signal-architecture migration that splits
 the former `signal-core` into `signal-frame` (frame mechanics) and
-`signal-sema` (Sema execution vocabulary). The migration plan lives
+`signal-sema` (Sema classification vocabulary). The migration plan lives
 in the primary workspace at
 `reports/designer/238-signal-architecture-redirection-contract-local-verbs.md`
 and `reports/designer/239-signal-architecture-migration-plan.md`.

@@ -1,18 +1,17 @@
-//! The closed Sema operation vocabulary.
+//! The closed Sema operation classification vocabulary.
 //!
-//! [`SemaOperation`] is the set of typed-record operations a Sema
-//! engine performs against registered record families. Atomicity
-//! is structural in the engine request/commit shape; it is not a
-//! separate operation.
+//! [`SemaOperation`] is the set of payloadless state-action labels
+//! that component-local executable commands project into for generic
+//! observation.
 
 use nota_codec::NotaEnum;
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 
-/// The closed operation set a Sema engine executes against typed
-/// records.
+/// The closed operation classification set for typed state actions.
 ///
-/// Atomicity is structural in the engine request/commit shape; it
-/// is not a separate operation.
+/// This enum does not carry executable payloads. Component daemons
+/// own executable command records and project them into this enum
+/// for observation and filtering.
 #[derive(
     Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
 )]
