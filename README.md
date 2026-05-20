@@ -1,10 +1,11 @@
 # signal-sema
 
-Sema-engine operation vocabulary: `Assert / Mutate / Retract / Match /
-Subscribe / Validate`. Speakable on the wire when a component
-explicitly exposes typed-table operations; consumed as a library by
-component daemons when they lower their public domain operations into
-typed-record state effects.
+Sema observation vocabulary: payloadless operation classes
+`Assert / Mutate / Retract / Match / Subscribe / Validate`, outcome
+classes such as `Asserted / Matched / Subscribed`, and the
+`SemaObservation` record that composes both halves. Component daemons
+consume this crate when they project their local executable Commands
+and Effects into cross-component observer labels.
 
 This crate is part of the signal-architecture migration that splits
 the former `signal-core` into `signal-frame` (frame mechanics) and
@@ -15,8 +16,12 @@ and `reports/designer/239-signal-architecture-migration-plan.md`.
 
 ## What this crate owns
 
-- `SemaOperation` — the closed six-operation set.
+- `SemaOperation` — the closed six-operation classification set.
 - `OperationClass` — broad classification of operation effect.
+- `SemaOutcome` — the closed effect classification set.
+- `SemaObservation` — one operation class plus one outcome class.
+- `ToSemaOperation` / `ToSemaOutcome` — projection traits implemented
+  by component-local Command and Effect enums.
 - `Bind`, `Wildcard`, `PatternField<T>` — the read-algebra pattern
   primitives that pair with `Match` and `Subscribe` payloads.
 - `Slot<Payload>`, `Revision` — the typed-record identity values

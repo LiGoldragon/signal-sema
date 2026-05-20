@@ -19,10 +19,10 @@ and `intent/component-shape.nota` 2026-05-20T02:00Z):
 
 `signal-sema` is the home of Layer 3. Component contracts (Layer 1)
 define their own domain verbs in their `signal-<component>` crates;
-daemons (Layer 2) define their typed Command enums internally and
-project to Sema classes via a `ToSemaOperation` trait so observers
-can filter on classification without knowing per-daemon command
-payloads.
+daemons (Layer 2) define their typed Command and Effect enums
+internally and project to Sema classes via `ToSemaOperation` and
+`ToSemaOutcome` traits so observers can filter on classification
+without knowing per-daemon command payloads.
 
 The earlier migration that introduced this crate is described in the
 primary workspace:
@@ -44,9 +44,15 @@ primary workspace:
 - `signal-sema` does not depend on `signal-frame`; the frame layer and
   the Sema classification vocabulary are separate. (Other contract
   crates may depend on both.)
-- `SemaOperation` is the closed classification set — payloadless
-  variants only; never carries executable payloads.
+- `SemaOperation` is the closed command classification set —
+  payloadless variants only; never carries executable payloads.
+- `SemaOutcome` is the closed effect classification set —
+  payloadless variants only; never carries component event payloads.
+- `SemaObservation` joins one `SemaOperation` with one `SemaOutcome`;
+  it does not carry timing, sequence, or component payload data.
 - `SemaOperation` is rkyv-archivable and NOTA-encodable.
+- `SemaOutcome` and `SemaObservation` are rkyv-archivable and
+  NOTA-encodable.
 - `SemaOperation` record-head spelling is PascalCase and stable.
 - Atomicity is structural in the engine request/commit shape and is
   expressed via typed component commands (Layer 2), not via Sema
@@ -55,7 +61,7 @@ primary workspace:
   namespace; the domain is implicit. (Per
   `~/primary/skills/naming.md`.)
 
-## Classification Set
+## Operation Classification Set
 
 | Class | Meaning (as observation label) |
 |---|---|
@@ -76,6 +82,27 @@ Operation classification is exposed as `OperationClass`:
 (Subscribe), `Validation` (Validate). Observers that need to dispatch
 on the broad class of effect use this; observers that need a
 fine-grained decision dispatch on the class itself.
+
+## Outcome Classification Set
+
+| Outcome | Meaning (as observation label) |
+|---|---|
+| `Asserted` | A new typed fact / event / row was appended. |
+| `Mutated` | An existing typed record transitioned at stable identity. |
+| `Retracted` | A typed record was tombstoned / removed. |
+| `Matched` | Typed records were read. |
+| `Subscribed` | A state-plus-delta stream was opened. |
+| `Validated` | A dry-run validation or planning request completed. |
+| `NoChange` | The request completed without changing observable state. |
+
+`SemaObservation` composes both halves:
+
+```rust
+SemaObservation {
+    operation: command.to_sema_operation(),
+    outcome: effect.to_sema_outcome(),
+}
+```
 
 ## Pattern Primitives
 
@@ -121,12 +148,12 @@ the typed wire shape and the family marker.
 ```mermaid
 flowchart TB
     contract["signal-&lt;component&gt; (Layer 1)<br/>Submit / Query / Configure / State"]
-    daemon["component daemon (Layer 2)<br/>typed Component Command + CommandExecutor"]
-    sema["signal-sema (Layer 3)<br/>Assert / Mutate / Retract / Match / Subscribe / Validate<br/>(payloadless classification)"]
+    daemon["component daemon (Layer 2)<br/>typed Component Command + Effect + CommandExecutor"]
+    sema["signal-sema (Layer 3)<br/>operation + outcome<br/>(payloadless classification)"]
     observer["persona-introspect / observers<br/>cross-component filtering by class"]
 
     contract --> daemon
-    daemon -. "ToSemaOperation projection" .-> sema
+    daemon -. "ToSemaOperation + ToSemaOutcome projection" .-> sema
     sema --> observer
 ```
 
@@ -153,12 +180,15 @@ flowchart TB
 ```text
 src/lib.rs       module entry and re-exports
 src/operation.rs SemaOperation + OperationClass; NotaEnum derives
+src/outcome.rs   SemaOutcome + SemaObservation; NotaEnum/NotaRecord derives
 src/pattern.rs   Bind, Wildcard, PatternField<T>; hand-written codec
 src/identity.rs  Slot<Payload>, Revision; rkyv identity records
 tests/operation.rs   SemaOperation round trips (NOTA + rkyv) and
                      class/is-write witnesses
+tests/outcome.rs     SemaOutcome + SemaObservation projection and
+                     round trips (NOTA + rkyv)
 tests/pattern.rs     Bind / Wildcard / PatternField<T> round trips
                      (NOTA + rkyv) and pattern dispatch witnesses
 tests/identity.rs    Slot<T> / Revision rkyv round trips
-examples/canonical.nota  Canonical record-head spelling per operation
+examples/canonical.nota  Canonical record-head spelling per operation/outcome
 ```
