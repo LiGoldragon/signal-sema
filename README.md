@@ -20,6 +20,7 @@ and `reports/designer/239-signal-architecture-migration-plan.md`.
 - `OperationClass` — broad classification of operation effect.
 - `SemaOutcome` — the closed effect classification set.
 - `SemaObservation` — one operation class plus one outcome class.
+- `Magnitude` — the ordered seven-level qualitative magnitude set.
 - `ToSemaOperation` / `ToSemaOutcome` — projection traits implemented
   by component-local Command and Effect enums.
 - `Bind`, `Wildcard`, `PatternField<T>` — the read-algebra pattern

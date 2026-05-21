@@ -13,11 +13,13 @@
 //! `reports/designer/239-signal-architecture-migration-plan.md`.
 
 pub mod identity;
+pub mod magnitude;
 pub mod operation;
 pub mod outcome;
 pub mod pattern;
 
 pub use identity::{ArchivedRevision, ArchivedSlot, Revision, Slot};
+pub use magnitude::{ArchivedMagnitude, Magnitude};
 pub use operation::{ArchivedSemaOperation, OperationClass, SemaOperation, ToSemaOperation};
 pub use outcome::{
     ArchivedSemaObservation, ArchivedSemaOutcome, SemaObservation, SemaOutcome, ToSemaOutcome,

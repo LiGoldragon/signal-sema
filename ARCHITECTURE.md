@@ -3,8 +3,8 @@
 `signal-sema` owns the universal Sema classification vocabulary: the
 *payloadless* state-action class labels used for cross-component
 observation and introspection, plus the read-algebra pattern
-primitives and typed identity values components carry inside their
-own typed records.
+primitives, qualitative magnitude vocabulary, and typed identity
+values components carry inside their own typed records.
 
 The classification vocabulary is the third layer of the three-layer
 model affirmed 2026-05-20 (per
@@ -53,6 +53,8 @@ primary workspace:
 - `SemaOperation` is rkyv-archivable and NOTA-encodable.
 - `SemaOutcome` and `SemaObservation` are rkyv-archivable and
   NOTA-encodable.
+- `Magnitude` is the closed seven-level qualitative magnitude set,
+  ordered from `Minimum` through `Maximum`.
 - `SemaOperation` record-head spelling is PascalCase and stable.
 - Atomicity is structural in the engine request/commit shape and is
   expressed via typed component commands (Layer 2), not via Sema
@@ -181,12 +183,15 @@ flowchart TB
 src/lib.rs       module entry and re-exports
 src/operation.rs SemaOperation + OperationClass; NotaEnum derives
 src/outcome.rs   SemaOutcome + SemaObservation; NotaEnum/NotaRecord derives
+src/magnitude.rs Magnitude; ordered seven-level NotaEnum
 src/pattern.rs   Bind, Wildcard, PatternField<T>; hand-written codec
 src/identity.rs  Slot<Payload>, Revision; rkyv identity records
 tests/operation.rs   SemaOperation round trips (NOTA + rkyv) and
                      class/is-write witnesses
 tests/outcome.rs     SemaOutcome + SemaObservation projection and
                      round trips (NOTA + rkyv)
+tests/magnitude.rs   Magnitude round trips (NOTA + rkyv), ordering,
+                     unknown-head rejection, and canonical coverage
 tests/pattern.rs     Bind / Wildcard / PatternField<T> round trips
                      (NOTA + rkyv) and pattern dispatch witnesses
 tests/identity.rs    Slot<T> / Revision rkyv round trips
