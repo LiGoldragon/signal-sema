@@ -53,8 +53,10 @@ primary workspace:
 - `SemaOperation` is rkyv-archivable and NOTA-encodable.
 - `SemaOutcome` and `SemaObservation` are rkyv-archivable and
   NOTA-encodable.
-- `Magnitude` is the closed seven-level qualitative magnitude set,
-  ordered from `Minimum` through `Maximum`.
+- `Magnitude` currently encodes the seven ordered qualitative
+  strength rungs from `Minimum` through `Maximum`; the next schema
+  widens it with `Unknown` for indeterminate health and readiness
+  readings.
 - `SemaOperation` record-head spelling is PascalCase and stable.
 - Atomicity is structural in the engine request/commit shape and is
   expressed via typed component commands (Layer 2), not via Sema
@@ -108,10 +110,12 @@ SemaObservation {
 
 ## Qualitative Magnitude
 
-`Magnitude` names a workspace-universal ordinal strength scale, used
-by component records that need to express a coarse qualitative reading
-of certainty, priority, severity, intensity, or any other ordered
-non-numeric strength.
+`Magnitude` names a workspace-universal qualitative strength scale,
+used by component records that need to express a coarse reading of
+certainty, priority, severity, intensity, health, readiness, or any
+other non-numeric strength.
+
+The current deployed schema is the seven ordered rungs below:
 
 | Variant | Rank |
 |---|---|
@@ -123,10 +127,18 @@ non-numeric strength.
 | `VeryHigh` | Above `High`. |
 | `Maximum` | Highest strength on the scale. |
 
-The set is **closed** (no `Unknown` or `Reserved` variant) and
-**ordered** (`PartialOrd` and `Ord` derives preserve declared rank).
-Components match a subset (`magnitude == Maximum`), use range
-comparison (`magnitude >= High`), or read the full variant set.
+The current set is **closed** and **ordered** (`PartialOrd` and
+`Ord` derives preserve declared rank). Components match a subset
+(`magnitude == Maximum`), use range comparison (`magnitude >= High`),
+or read the full variant set.
+
+The next schema widens `Magnitude` with `Unknown`. `Unknown` is for
+indeterminate readings, especially health and readiness states where
+the component can report that a state exists but cannot rank it on
+the strength scale. `Unknown` is not a reserved future rung and not a
+weaker or stronger value; it is categorically outside the ordering.
+Until that widening lands, records carrying `Unknown` continue to
+fail decode under the current seven-rung schema.
 
 **The vocabulary is the schema; consumption is per-component policy.**
 A component that classifies finely emits any of the seven; a component
@@ -225,13 +237,12 @@ open question; moves to the cemented body when settled, retires when
 ruled out. Per `~/primary/skills/architecture-editor.md` §"Carrying
 uncertainty".*
 
-- **Reserved/Unknown variant.** Today the set is strictly closed; a
-  record carrying a token not in the seven (e.g. `Severe`,
-  `Critical`) fails decode. Open question: add a `Reserved` /
-  `Unspecified` variant as a graceful default, or hold strict-closed?
-  Lean: strict-closed (matches `SemaOperation`); the cost is that
-  adding a future eighth rung is a hard break of every persisted
-  record. Confirm strict-closed with psyche.
+- **`Unknown` comparison surface.** Adding `Unknown` is decided; the
+  remaining question is how comparison APIs behave once it exists.
+  One shape makes `Magnitude` partially ordered, with comparisons
+  involving `Unknown` returning no order. Another keeps an
+  `OrderedMagnitude` projection over only the seven ordered rungs and
+  treats `Magnitude` as the wider categorical vocabulary.
 
 ## Code Map
 
@@ -239,15 +250,16 @@ uncertainty".*
 src/lib.rs       module entry and re-exports
 src/operation.rs SemaOperation + OperationClass; NotaEnum derives
 src/outcome.rs   SemaOutcome + SemaObservation; NotaEnum/NotaRecord derives
-src/magnitude.rs Magnitude; ordered seven-level NotaEnum
+src/magnitude.rs Magnitude; current ordered seven-level NotaEnum
 src/pattern.rs   Bind, Wildcard, PatternField<T>; hand-written codec
 src/identity.rs  Slot<Payload>, Revision; rkyv identity records
 tests/operation.rs   SemaOperation round trips (NOTA + rkyv) and
                      class/is-write witnesses
 tests/outcome.rs     SemaOutcome + SemaObservation projection and
                      round trips (NOTA + rkyv)
-tests/magnitude.rs   Magnitude round trips (NOTA + rkyv), ordering,
-                     unknown-head rejection, and canonical coverage
+tests/magnitude.rs   Magnitude round trips (NOTA + rkyv), current
+                     ordering, unknown-head rejection, and canonical
+                     coverage
 tests/pattern.rs     Bind / Wildcard / PatternField<T> round trips
                      (NOTA + rkyv) and pattern dispatch witnesses
 tests/identity.rs    Slot<T> / Revision rkyv round trips
