@@ -106,6 +106,47 @@ SemaObservation {
 }
 ```
 
+## Qualitative Magnitude
+
+`Magnitude` names a workspace-universal ordinal strength scale, used
+by component records that need to express a coarse qualitative reading
+of certainty, priority, severity, intensity, or any other ordered
+non-numeric strength.
+
+| Variant | Rank |
+|---|---|
+| `Minimum` | Lowest strength on the scale. |
+| `VeryLow` | Below `Low`. |
+| `Low` | Lower-middle strength. |
+| `Medium` | Centre of the scale. |
+| `High` | Upper-middle strength. |
+| `VeryHigh` | Above `High`. |
+| `Maximum` | Highest strength on the scale. |
+
+The set is **closed** (no `Unknown` or `Reserved` variant) and
+**ordered** (`PartialOrd` and `Ord` derives preserve declared rank).
+Components match a subset (`magnitude == Maximum`), use range
+comparison (`magnitude >= High`), or read the full variant set.
+
+**The vocabulary is the schema; consumption is per-component policy.**
+A component that classifies finely emits any of the seven; a component
+that matches only coarse distinctions reads the full set and matches
+against a subset. Never collapse the wire vocabulary to fit a current
+consumption policy — that move forces writers to flatten distinctions
+they perceive and replays the drift the universal vocabulary exists
+to prevent.
+
+**Field name carries the dimension; type carries the scale.** Records
+hold `certainty: Magnitude` (Spirit's `Entry`), `priority: Magnitude`
+(Mind item priority), `severity: Magnitude` (any future component).
+The field name supplies the dimension; the type supplies the strength
+scale. No wrapping type like `SizeMagnitude` (would duplicate "scale"
+in the type name) or `IntentCertainty` (would tie the universal scale
+to one domain). Per
+`~/primary/skills/naming.md` and the branches/leaves vocabulary in
+`~/primary/skills/language-design.md` — `Magnitude` is a fixed-size
+leaf, the canonical worked example of the leaf shape.
+
 ## Pattern Primitives
 
 Component Commands whose class projects to `Match` or `Subscribe`
@@ -176,6 +217,21 @@ flowchart TB
   `Infer`, `Recurse`). Those belong in `sema-engine` and/or in
   component contracts that publish their read plans.
 - No `Request<Payload>` envelope. That lives in `signal-frame`.
+
+## Possible features (not decided)
+
+*Items here are under consideration, not committed. Each names the
+open question; moves to the cemented body when settled, retires when
+ruled out. Per `~/primary/skills/architecture-editor.md` §"Carrying
+uncertainty".*
+
+- **Reserved/Unknown variant.** Today the set is strictly closed; a
+  record carrying a token not in the seven (e.g. `Severe`,
+  `Critical`) fails decode. Open question: add a `Reserved` /
+  `Unspecified` variant as a graceful default, or hold strict-closed?
+  Lean: strict-closed (matches `SemaOperation`); the cost is that
+  adding a future eighth rung is a hard break of every persisted
+  record. Confirm strict-closed with psyche.
 
 ## Code Map
 
