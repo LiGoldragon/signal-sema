@@ -198,6 +198,143 @@ Allocation, lookup, compare-and-set, and persistence belong to each
 daemon's `CommandExecutor` (over `sema-engine`); this crate only owns
 the typed wire shape and the family marker.
 
+## SemaObservation as a Tier-2-shaped type
+
+*Cross-cutting wire-and-observation discipline that `signal-sema`
+contributes to the three-tier signal sizing in
+`signal-frame/ARCHITECTURE.md` §5. Captured per Spirit records 244
+(three-tier sizing baseline), 251 (Part 1 leans ratified, including
+Q1.6 — SemaObservation is naturally Tier-2-shaped), 271 (64-bit
+verb-namespace structure), 272 (universal data variants
+pre-allocated across namespaces), 273 (extended 64-byte
+identity-bearing tier).*
+
+`SemaObservation` is **structurally a Tier-2-shaped type** — small,
+universal, classification-only. It joins one `SemaOperation`
+(payloadless command class) with one `SemaOutcome` (payloadless
+effect class) and never carries timing, sequence, or component
+payload data. That shape makes it the natural cross-cutting Tier 1
+projection for every observable channel that wants a uniform
+verb-namespace stream for `persona-introspect` aggregation.
+
+### Verb-namespace shape applied to SemaObservation
+
+The 64-bit verb-namespace structure from
+`signal-frame/ARCHITECTURE.md` §5.2 maps onto a `SemaObservation`
+Tier 1 projection as follows:
+
+```mermaid
+flowchart LR
+    byte_zero["byte 0<br/>sema kind<br/>(beingness — Assert, Mutate,<br/>Retract, Match, Subscribe, Validate)"]
+    byte_one["byte 1<br/>outcome<br/>(Asserted, Mutated, Retracted,<br/>Matched, Subscribed, Validated, NoChange)"]
+    byte_two["byte 2<br/>component<br/>(ComponentKind tag)"]
+    byte_three["byte 3<br/>operation class<br/>(Write, Read, Stream, Validation)"]
+    byte_four["byte 4<br/>extra<br/>(universal data variant or<br/>sub-classification)"]
+    byte_five["bytes 5-7<br/>timestamp seconds<br/>(u24, ~194 days resolution<br/>OR sequence number)"]:::span
+
+    byte_zero --- byte_one --- byte_two --- byte_three --- byte_four --- byte_five
+
+    classDef span fill:#eef,stroke:#88a
+    style byte_zero fill:#fef
+```
+
+Byte 0 carries the **sema kind** — `SemaOperation` as the root verb,
+its variant index packed as a `u8`. The classification IS the
+"beingness" of the observation per the verb-namespace rule (Spirit
+record 271). Bytes 1-7 are sub-classifications: the outcome class,
+the component identity (so cross-component aggregation knows whose
+event it is), the operation class (`Write` / `Read` / `Stream` /
+`Validation` from `OperationClass`), an extra slot for sub-detail or
+a universal data variant, and a 24-bit suffix for timing or
+sequence. Each field is independently indexable through low-byte
+shifts.
+
+This packing fits within a `u64` exactly. The `LogVariant`
+projection for `SemaObservation` is hand-implemented (per /155 §1.5
+the macro auto-derive is for `signal_channel!`-generated types;
+`SemaObservation` is hand-defined in this crate). The shape stays
+stable while the byte assignments above are illustrative — the
+final byte-layout choice is the canonical Tier 1 implementation
+bead's call.
+
+### Universal data variants in observations
+
+Per Spirit record 272, universal data sub-variants (`U8`, `U16`,
+and growing) are pre-allocated across all signal namespaces. The
+universal sub-variant set is owned by `signal-frame/ARCHITECTURE.md`
+§5.3; `SemaObservation` inherits it through the `extra` byte (byte
+4 above) and through component-specific sub-variants that ride in
+later positions.
+
+A worked example for the Criome 16-bit short ID (the canonical
+`U16` use case from Spirit record 272):
+
+```mermaid
+flowchart LR
+    obs["SemaObservation<br/>(Tier 1 projection)"]
+    obs --> byte_zero["byte 0<br/>SemaOperation::Assert"]
+    obs --> byte_one["byte 1<br/>SemaOutcome::Asserted"]
+    obs --> byte_two["byte 2<br/>Criome component tag"]
+    obs --> byte_three["byte 3<br/>OperationClass::Write"]
+    obs --> bytes_four_five["bytes 4-5<br/>U16 — Criome 16-bit<br/>short public-key ID"]
+    obs --> bytes_six_seven["bytes 6-7<br/>u16 sequence tail"]
+
+    style obs fill:#fef
+    style bytes_four_five fill:#eef
+```
+
+An observer reading the Tier 1 stream sees the Criome short ID in
+the same byte position whether the event came from
+`signal-criome-vote`, `signal-criome-authorization`, or any future
+Criome-namespace channel. The universal data variant convention is
+what gives cross-namespace observers a stable vocabulary in bytes
+1-7.
+
+### Tier 2 — when `SemaObservation` itself becomes a summary
+
+The 64-bit `SemaObservation` Tier 1 projection is the cross-cutting
+observation grain; **the 64-byte Tier 2 projection adds room for
+identity-bearing context** (per Spirit record 273). A Tier-2
+`SemaObservation` summary carries:
+
+| Field | Width | Purpose |
+|---|---|---|
+| Tier 1 packed `u64` | 8 bytes | sema kind, outcome, component, class, extra, timing |
+| `Slot<Payload>` | 8 bytes | typed wire-identity reference to the affected record |
+| `Revision` | 8 bytes | generation counter at the slot |
+| component public key or signature | 32-48 bytes | identity-bearing context (e.g. Criome quorum public key) |
+| padding | remainder | aligned to 64-byte boundary |
+
+The Tier 2 shape lets an `persona-introspect` aggregator follow
+identity-bearing classification — "who asserted what, at which
+slot, at which revision" — without dropping into the full rkyv
+record at Tier 3. The const-generic 64-byte size check from
+`signal-frame`'s `LogSummary` trait enforces the bound at compile
+time.
+
+### What this crate owns vs delegates
+
+`signal-sema` owns the `SemaOperation` / `SemaOutcome` /
+`SemaObservation` records and their classification semantics. The
+hand-written `LogVariant` and (when defined) `LogSummary` impls for
+`SemaObservation` live in this crate; the traits themselves live in
+`signal-frame`. The universal data sub-variant set is owned by
+`signal-frame` §5.3 — `signal-sema` consumes it.
+
+### Open follow-ons
+
+- The hand-implementation of `LogVariant for SemaObservation`
+  tracks under bead `primary-2py5` (signal-sema: LogVariant impl
+  for SemaObservation — first canonical case).
+- The final byte-layout choice in the §"Verb-namespace shape"
+  diagram is illustrative; the bead author chooses whether to spend
+  the trailing bytes on timestamp seconds, a sequence number, a
+  third universal data variant, or split between them.
+- `SemaObservation` does not currently carry a component-identity
+  field; the byte-2 "component" tag above implies one. The
+  `ComponentKind` enum (or a successor) lives outside this crate —
+  the integration point is the bead author's design choice.
+
 ## Boundary
 
 ```mermaid
