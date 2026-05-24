@@ -1,0 +1,42 @@
+{}
+
+[]
+
+[]
+
+[
+  (Assert [Fact])
+  (Mutate [Record])
+  (Retract [Record])
+  (Match [Query])
+  (Subscribe [Stream])
+  (Validate [Plan])
+]
+
+{
+  Assert [(Fact Fact)]
+  Mutate [(Record Record)]
+  Retract [(Record Record)]
+  Match [(Query Query)]
+  Subscribe [(Stream Stream)]
+  Validate [(Plan Plan)]
+  SemaOperation [Assert Mutate Retract Match Subscribe Validate]
+  SemaOutcome [Asserted Mutated Retracted Matched Subscribed Validated Rejected]
+  SemaObservation (SemaOperation SemaOutcome)
+  Magnitude [Minimum VeryLow Low Medium High VeryHigh Maximum]
+  Fact (Text)
+  Record (Text)
+  Query (Text)
+  Stream (Text)
+  Plan (Text)
+  Text (String)
+  Identifier (u64)
+  Name (String)
+  Path (String)
+  Status [Concept Active Retired]
+}
+
+[
+  (Version 0 1)
+  (Status Concept)
+]
