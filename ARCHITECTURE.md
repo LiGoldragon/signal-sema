@@ -402,3 +402,16 @@ tests/pattern.rs     Bind / Wildcard / PatternField<T> round trips
 tests/identity.rs    Slot<T> / Revision rkyv round trips
 examples/canonical.nota  Canonical record-head spelling per operation/outcome
 ```
+
+## Macro-pattern integration
+
+**Status:** integrated into the brilliant macro library pattern per `reports/designer/326-v13-spirit-complete-schema-vision.md §3` (schemas as macro-pattern instance).
+
+**Role:** this crate is the universal vocabulary substrate. It owns `SemaOperation`, `SemaOutcome`, `SemaObservation`, `Magnitude`, the pattern primitives (`Bind`, `Wildcard`, `PatternField<T>`), and the identity primitives (`Slot<T>`, `Revision`). Every per-component schema imports these types via cross-schema imports and consumes them directly.
+
+**Integration target:** universal SemaOperation / SemaOutcome vocabulary; cross-schema imports pull these types into per-component schemas. The schema-file `import sema` (or equivalent) construct lets a per-component schema reference `SemaOperation` and friends without redeclaring them; the AssembledSchema resolver per `/326-v13` + `operator/174` resolves these imports against this crate's published types and the macro emits direct binding to `signal-sema` instead of re-emitting the vocabulary.
+
+**References:**
+- `reports/designer/326-v13-spirit-complete-schema-vision.md` — schema language + macro pattern
+- `reports/designer/324-migration-mvp-spirit-handover-re-specification.md` — migration MVP
+- `reports/operator/174-schema-import-header-design-critique-2026-05-24.md` — lowering + AssembledSchema form
