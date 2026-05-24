@@ -6,6 +6,7 @@
 
 use nota_codec::{NotaEnum, NotaRecord};
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
+use signal_frame::LogVariant;
 
 use crate::{SemaOperation, ToSemaOperation};
 
@@ -97,5 +98,27 @@ impl SemaObservation {
         Effect: ToSemaOutcome,
     {
         Self::new(command.to_sema_operation(), effect.to_sema_outcome())
+    }
+}
+
+impl LogVariant for SemaObservation {
+    fn log_variant(&self) -> u64 {
+        let operation = self.operation.log_variant().to_le_bytes()[0];
+        let outcome = match self.outcome {
+            SemaOutcome::Asserted => 0,
+            SemaOutcome::Mutated => 1,
+            SemaOutcome::Retracted => 2,
+            SemaOutcome::Matched => 3,
+            SemaOutcome::Subscribed => 4,
+            SemaOutcome::Validated => 5,
+            SemaOutcome::NoChange => 6,
+        };
+        let class = match self.operation.class() {
+            crate::OperationClass::Write => 0,
+            crate::OperationClass::Read => 1,
+            crate::OperationClass::Stream => 2,
+            crate::OperationClass::Validation => 3,
+        };
+        u64::from_le_bytes([operation, outcome, class, 0, 0, 0, 0, 0])
     }
 }

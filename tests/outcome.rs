@@ -2,6 +2,7 @@
 
 use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
 use rkyv::rancor::Error as RkyvError;
+use signal_frame::LogVariant;
 use signal_sema::{
     ArchivedSemaObservation, ArchivedSemaOutcome, SemaObservation, SemaOperation, SemaOutcome,
     ToSemaOperation, ToSemaOutcome,
@@ -19,6 +20,22 @@ fn outcomes() -> [SemaOutcome; 7] {
         SemaOutcome::Validated,
         SemaOutcome::NoChange,
     ]
+}
+
+#[test]
+fn sema_observation_projects_to_short_header() {
+    let observation = SemaObservation::new(SemaOperation::Assert, SemaOutcome::Asserted);
+
+    assert_eq!(
+        observation.log_variant().to_le_bytes(),
+        [0, 0, 0, 0, 0, 0, 0, 0]
+    );
+
+    let observation = SemaObservation::new(SemaOperation::Match, SemaOutcome::Matched);
+    assert_eq!(
+        observation.log_variant().to_le_bytes(),
+        [3, 3, 1, 0, 0, 0, 0, 0]
+    );
 }
 
 #[test]
@@ -43,6 +60,25 @@ fn sema_outcome_record_heads_are_stable() {
     }
 
     assert_eq!(SemaOutcome::from_record_head("Changed"), None);
+}
+
+#[test]
+fn sema_operation_projects_to_short_header_root_byte() {
+    let cases = [
+        (SemaOperation::Assert, 0),
+        (SemaOperation::Mutate, 1),
+        (SemaOperation::Retract, 2),
+        (SemaOperation::Match, 3),
+        (SemaOperation::Subscribe, 4),
+        (SemaOperation::Validate, 5),
+    ];
+
+    for (operation, byte) in cases {
+        assert_eq!(
+            operation.log_variant().to_le_bytes(),
+            [byte, 0, 0, 0, 0, 0, 0, 0]
+        );
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
