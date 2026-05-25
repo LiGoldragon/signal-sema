@@ -405,7 +405,7 @@ examples/canonical.nota  Canonical record-head spelling per operation/outcome
 
 ## Macro-pattern integration
 
-**Status:** integrated into the brilliant macro library pattern per `reports/designer/326-v13-spirit-complete-schema-vision.md §3` (schemas as macro-pattern instance).
+**Status:** integrated into the `schema-rust` composer + `emit_schema!` proc-macro pattern per `reports/designer/340-schema-emission-no-legacy-signal-channel-2026-05-25.md` + `reports/operator/184-schema-macro-old-emitter-audit-2026-05-25.md` (schemas as `AssembledSchema` input to the `schema-rust` composer; emission top-down through `emit_schema!`). Supersedes `/326-v13`'s "brilliant macro library" framing which endorsed extending `signal-frame/macros/` — that direction is reversed per psyche record 639.
 
 **Role:** this crate is the universal vocabulary substrate. It owns `SemaOperation`, `SemaOutcome`, `SemaObservation`, `Magnitude`, the pattern primitives (`Bind`, `Wildcard`, `PatternField<T>`), and the identity primitives (`Slot<T>`, `Revision`). Every per-component schema imports these types via cross-schema imports and consumes them directly.
 
