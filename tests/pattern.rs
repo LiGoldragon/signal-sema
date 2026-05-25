@@ -81,25 +81,25 @@ fn pattern_field_string_match_emits_bare_when_camel_case() {
     // camelCase / kebab-case content emits as bare identifiers
     // per nota-codec's strict bare-string alphabet. PascalCase
     // content is reserved for enum variants per the three-case
-    // rule and emits as quoted (see next test).
+    // rule and emits as a bracket string (see next test).
     let pattern: PatternField<String> = PatternField::Match("alice".into());
     assert_eq!(encode(&pattern), "alice");
 }
 
 #[test]
-fn pattern_field_string_match_emits_quoted_for_pascal_case() {
-    // PascalCase content at a String position emits as quoted —
+fn pattern_field_string_match_emits_bracket_string_for_pascal_case() {
+    // PascalCase content at a String position emits as a bracket string —
     // bare PascalCase is reserved for variants. The decode side
     // rejects bare PascalCase as PascalCaseAtStringPosition;
-    // emitting quoted keeps encode/decode symmetric.
+    // emitting a bracket string keeps encode/decode symmetric.
     let pattern: PatternField<String> = PatternField::Match("User".into());
-    assert_eq!(encode(&pattern), "\"User\"");
+    assert_eq!(encode(&pattern), "[User]");
 }
 
 #[test]
-fn pattern_field_string_match_emits_quoted_when_not_bare_eligible() {
+fn pattern_field_string_match_emits_bracket_string_when_not_bare_eligible() {
     let pattern: PatternField<String> = PatternField::Match("hello world".into());
-    assert_eq!(encode(&pattern), "\"hello world\"");
+    assert_eq!(encode(&pattern), "[hello world]");
 }
 
 #[test]
