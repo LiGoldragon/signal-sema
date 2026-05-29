@@ -6,8 +6,9 @@ use signal_sema::{ArchivedMagnitude, Magnitude};
 
 const CANONICAL: &str = include_str!("../examples/canonical.nota");
 
-fn magnitudes() -> [Magnitude; 7] {
+fn magnitudes() -> [Magnitude; 8] {
     [
+        Magnitude::Zero,
         Magnitude::Minimum,
         Magnitude::VeryLow,
         Magnitude::Low,
@@ -21,6 +22,7 @@ fn magnitudes() -> [Magnitude; 7] {
 #[test]
 fn magnitude_record_heads_are_stable() {
     let cases = [
+        (Magnitude::Zero, "Zero"),
         (Magnitude::Minimum, "Minimum"),
         (Magnitude::VeryLow, "VeryLow"),
         (Magnitude::Low, "Low"),
@@ -75,7 +77,7 @@ fn magnitudes_round_trip_through_rkyv() {
 }
 
 #[test]
-fn magnitude_order_is_minimum_to_maximum() {
+fn magnitude_order_is_zero_to_maximum() {
     let magnitudes = magnitudes();
 
     for pair in magnitudes.windows(2) {
@@ -87,8 +89,26 @@ fn magnitude_order_is_minimum_to_maximum() {
         );
     }
 
-    assert_eq!(magnitudes.first(), Some(&Magnitude::Minimum));
+    assert_eq!(magnitudes.first(), Some(&Magnitude::Zero));
     assert_eq!(magnitudes.last(), Some(&Magnitude::Maximum));
+}
+
+#[test]
+fn magnitude_storage_discriminants_keep_legacy_rungs_stable() {
+    let discriminants = [
+        (Magnitude::Minimum as u8, 0),
+        (Magnitude::VeryLow as u8, 1),
+        (Magnitude::Low as u8, 2),
+        (Magnitude::Medium as u8, 3),
+        (Magnitude::High as u8, 4),
+        (Magnitude::VeryHigh as u8, 5),
+        (Magnitude::Maximum as u8, 6),
+        (Magnitude::Zero as u8, 7),
+    ];
+
+    for (actual, expected) in discriminants {
+        assert_eq!(actual, expected);
+    }
 }
 
 #[test]

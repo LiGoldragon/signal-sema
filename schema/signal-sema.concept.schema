@@ -23,7 +23,7 @@
   SemaOperation [Assert Mutate Retract Match Subscribe Validate]
   SemaOutcome [Asserted Mutated Retracted Matched Subscribed Validated Rejected]
   SemaObservation (SemaOperation SemaOutcome)
-  Magnitude [Minimum VeryLow Low Medium High VeryHigh Maximum]
+  Magnitude [Minimum VeryLow Low Medium High VeryHigh Maximum Zero]
   Fact (Text)
   Record (Text)
   Query (Text)

@@ -53,10 +53,11 @@ primary workspace:
 - `SemaOperation` is rkyv-archivable and NOTA-encodable.
 - `SemaOutcome` and `SemaObservation` are rkyv-archivable and
   NOTA-encodable.
-- `Magnitude` currently encodes the seven ordered qualitative
-  strength rungs from `Minimum` through `Maximum`; the next schema
-  widens it with `Unknown` for indeterminate health and readiness
-  readings.
+- `Magnitude` currently encodes the eight ordered qualitative
+  strength rungs from `Zero` through `Maximum`; `Zero` is the
+  policy-neutral bottom rung for "no signal" / withdrawn strength.
+  Its rkyv discriminant is intentionally appended after the original
+  seven variants so archived data keeps the same byte meaning.
 - `SemaOperation` record-head spelling is PascalCase and stable.
 - Atomicity is structural in the engine request/commit shape and is
   expressed via typed component commands (Layer 2), not via Sema
@@ -115,10 +116,11 @@ used by component records that need to express a coarse reading of
 certainty, priority, severity, intensity, health, readiness, or any
 other non-numeric strength.
 
-The current deployed schema is the seven ordered rungs below:
+The current deployed schema is the eight ordered rungs below:
 
 | Variant | Rank |
 |---|---|
+| `Zero` | Neutral bottom rung; component policy decides what "no signal" means in that domain. |
 | `Minimum` | Lowest strength on the scale. |
 | `VeryLow` | Below `Low`. |
 | `Low` | Lower-middle strength. |
@@ -128,20 +130,25 @@ The current deployed schema is the seven ordered rungs below:
 | `Maximum` | Highest strength on the scale. |
 
 The current set is **closed** and **ordered** (`PartialOrd` and
-`Ord` derives preserve declared rank). Components match a subset
+`Ord` expose the semantic rank). Components match a subset
 (`magnitude == Maximum`), use range comparison (`magnitude >= High`),
 or read the full variant set.
 
-The next schema widens `Magnitude` with `Unknown`. `Unknown` is for
-indeterminate readings, especially health and readiness states where
-the component can report that a state exists but cannot rank it on
-the strength scale. `Unknown` is not a reserved future rung and not a
-weaker or stronger value; it is categorically outside the ordering.
-Until that widening lands, records carrying `Unknown` continue to
-fail decode under the current seven-rung schema.
+`Zero` is universal vocabulary, not Spirit policy. Spirit interprets
+`certainty == Zero` as a removal candidate; another component may
+interpret `priority == Zero` as not worth scheduling or `severity ==
+Zero` as no issue.
+
+The next schema may still widen `Magnitude` with `Unknown`. `Unknown`
+is for indeterminate readings, especially health and readiness states
+where the component can report that a state exists but cannot rank it
+on the strength scale. `Unknown` is not a weaker or stronger value; it
+is categorically outside the ordering. Until that widening lands,
+records carrying `Unknown` continue to fail decode under the current
+eight-rung schema.
 
 **The vocabulary is the schema; consumption is per-component policy.**
-A component that classifies finely emits any of the seven; a component
+A component that classifies finely emits any of the eight; a component
 that matches only coarse distinctions reads the full set and matches
 against a subset. Never collapse the wire vocabulary to fit a current
 consumption policy — that move forces writers to flatten distinctions
@@ -374,11 +381,11 @@ open question; moves to the cemented body when settled, retires when
 ruled out. Per `~/primary/skills/architecture-editor.md` §"Carrying
 uncertainty".*
 
-- **`Unknown` comparison surface.** Adding `Unknown` is decided; the
-  remaining question is how comparison APIs behave once it exists.
-  One shape makes `Magnitude` partially ordered, with comparisons
-  involving `Unknown` returning no order. Another keeps an
-  `OrderedMagnitude` projection over only the seven ordered rungs and
+- **`Unknown` comparison surface.** Adding `Unknown` remains a possible
+  future widening. The remaining question is how comparison APIs behave
+  once it exists. One shape makes `Magnitude` partially ordered, with
+  comparisons involving `Unknown` returning no order. Another keeps an
+  `OrderedMagnitude` projection over only the eight ordered rungs and
   treats `Magnitude` as the wider categorical vocabulary.
 
 ## Code Map
@@ -387,7 +394,7 @@ uncertainty".*
 src/lib.rs       module entry and re-exports
 src/operation.rs SemaOperation + OperationClass; NotaEnum derives
 src/outcome.rs   SemaOutcome + SemaObservation; NotaEnum/NotaRecord derives
-src/magnitude.rs Magnitude; current ordered seven-level NotaEnum
+src/magnitude.rs Magnitude; current ordered eight-level NotaEnum
 src/pattern.rs   Bind, Wildcard, PatternField<T>; hand-written codec
 src/identity.rs  Slot<Payload>, Revision; rkyv identity records
 tests/operation.rs   SemaOperation round trips (NOTA + rkyv) and

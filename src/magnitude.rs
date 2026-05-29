@@ -1,4 +1,4 @@
-//! Seven-level magnitude vocabulary.
+//! Eight-level magnitude vocabulary.
 //!
 //! [`Magnitude`] names ordered qualitative strength without carrying
 //! component-domain payloads.
@@ -6,29 +6,22 @@
 use nota_codec::NotaEnum;
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 
-/// Ordered qualitative magnitude, from minimum through maximum.
+/// Ordered qualitative magnitude, from zero through maximum.
 #[derive(
-    Archive,
-    RkyvSerialize,
-    RkyvDeserialize,
-    NotaEnum,
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
 )]
+#[repr(u8)]
 pub enum Magnitude {
-    Minimum,
-    VeryLow,
-    Low,
-    Medium,
-    High,
-    VeryHigh,
-    Maximum,
+    Minimum = 0,
+    VeryLow = 1,
+    Low = 2,
+    Medium = 3,
+    High = 4,
+    VeryHigh = 5,
+    Maximum = 6,
+    /// Neutral bottom rung. Kept physically last so persisted rkyv
+    /// discriminants for the original seven variants stay stable.
+    Zero = 7,
 }
 
 impl Magnitude {
@@ -42,6 +35,7 @@ impl Magnitude {
             Self::High => "High",
             Self::VeryHigh => "VeryHigh",
             Self::Maximum => "Maximum",
+            Self::Zero => "Zero",
         }
     }
 
@@ -56,7 +50,33 @@ impl Magnitude {
             "High" => Some(Self::High),
             "VeryHigh" => Some(Self::VeryHigh),
             "Maximum" => Some(Self::Maximum),
+            "Zero" => Some(Self::Zero),
             _ => None,
         }
+    }
+
+    const fn order_rank(self) -> u8 {
+        match self {
+            Self::Zero => 0,
+            Self::Minimum => 1,
+            Self::VeryLow => 2,
+            Self::Low => 3,
+            Self::Medium => 4,
+            Self::High => 5,
+            Self::VeryHigh => 6,
+            Self::Maximum => 7,
+        }
+    }
+}
+
+impl PartialOrd for Magnitude {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Magnitude {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.order_rank().cmp(&other.order_rank())
     }
 }
