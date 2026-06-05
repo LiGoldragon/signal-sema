@@ -2,7 +2,6 @@
 
 use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
 use rkyv::rancor::Error as RkyvError;
-use signal_frame::LogVariant;
 use signal_sema::{
     ArchivedSemaObservation, ArchivedSemaOutcome, SemaObservation, SemaOperation, SemaOutcome,
     ToSemaOperation, ToSemaOutcome,

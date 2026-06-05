@@ -6,7 +6,6 @@
 
 use nota_codec::{NotaEnum, NotaRecord};
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
-use signal_frame::LogVariant;
 
 use crate::{SemaOperation, ToSemaOperation};
 
@@ -63,6 +62,20 @@ impl SemaOutcome {
             _ => None,
         }
     }
+
+    /// Stable second-byte classification code for compact observations.
+    pub const fn log_variant(self) -> u64 {
+        let byte = match self {
+            Self::Asserted => 0,
+            Self::Mutated => 1,
+            Self::Retracted => 2,
+            Self::Matched => 3,
+            Self::Subscribed => 4,
+            Self::Validated => 5,
+            Self::NoChange => 6,
+        };
+        byte as u64
+    }
 }
 
 /// Projection from a component-local effect into the universal Sema
@@ -99,26 +112,17 @@ impl SemaObservation {
     {
         Self::new(command.to_sema_operation(), effect.to_sema_outcome())
     }
-}
 
-impl LogVariant for SemaObservation {
-    fn log_variant(&self) -> u64 {
-        let operation = self.operation.log_variant().to_le_bytes()[0];
-        let outcome = match self.outcome {
-            SemaOutcome::Asserted => 0,
-            SemaOutcome::Mutated => 1,
-            SemaOutcome::Retracted => 2,
-            SemaOutcome::Matched => 3,
-            SemaOutcome::Subscribed => 4,
-            SemaOutcome::Validated => 5,
-            SemaOutcome::NoChange => 6,
-        };
+    /// Stable compact observation code: operation byte, outcome byte, class byte.
+    pub const fn log_variant(&self) -> u64 {
+        let operation = self.operation.log_variant();
+        let outcome = self.outcome.log_variant();
         let class = match self.operation.class() {
             crate::OperationClass::Write => 0,
             crate::OperationClass::Read => 1,
             crate::OperationClass::Stream => 2,
             crate::OperationClass::Validation => 3,
         };
-        u64::from_le_bytes([operation, outcome, class, 0, 0, 0, 0, 0])
+        operation | (outcome << 8) | ((class as u64) << 16)
     }
 }

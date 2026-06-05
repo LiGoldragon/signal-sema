@@ -6,7 +6,6 @@
 
 use nota_codec::NotaEnum;
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
-use signal_frame::LogVariant;
 
 /// The closed operation classification set for typed state actions.
 ///
@@ -77,14 +76,12 @@ impl SemaOperation {
     pub const fn is_write(self) -> bool {
         matches!(self.class(), OperationClass::Write)
     }
-}
 
-impl LogVariant for SemaOperation {
-    fn log_variant(&self) -> u64 {
-        // DESIGN-DECISION-REVIEW (designer/320 §2.13): reuse
-        // LogVariant for sema-side. Alternative: parallel
-        // SemaLogVariant trait. Revisit if signal-side and sema-side
-        // header layouts diverge meaningfully.
+    /// Stable low-byte classification code for compact observations.
+    ///
+    /// This is vocabulary-local metadata, not a `signal-frame` trait impl:
+    /// the frame kernel and the Sema classification vocabulary stay separate.
+    pub const fn log_variant(self) -> u64 {
         let byte = match self {
             Self::Assert => 0,
             Self::Mutate => 1,
@@ -93,7 +90,7 @@ impl LogVariant for SemaOperation {
             Self::Subscribe => 4,
             Self::Validate => 5,
         };
-        u64::from_le_bytes([byte, 0, 0, 0, 0, 0, 0, 0])
+        byte as u64
     }
 }
 
