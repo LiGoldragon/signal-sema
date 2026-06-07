@@ -1,6 +1,6 @@
 //! Falsifiable witnesses for outcome-side Sema classification.
 
-use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
+use nota_next::{NotaEncode, NotaSource};
 use rkyv::rancor::Error as RkyvError;
 use signal_sema::{
     ArchivedSemaObservation, ArchivedSemaOutcome, SemaObservation, SemaOperation, SemaOutcome,
@@ -148,13 +148,12 @@ fn sema_observation_composes_command_and_effect_projection() {
 #[test]
 fn sema_outcomes_round_trip_through_nota() {
     for outcome in outcomes() {
-        let mut encoder = Encoder::new();
-        outcome.encode(&mut encoder).expect("encode");
-        let encoded = encoder.into_string();
+        let encoded = outcome.to_nota();
         assert_eq!(encoded, outcome.as_record_head());
 
-        let mut decoder = Decoder::new(&encoded);
-        let decoded = SemaOutcome::decode(&mut decoder).expect("decode");
+        let decoded = NotaSource::new(&encoded)
+            .parse::<SemaOutcome>()
+            .expect("decode");
         assert_eq!(decoded, outcome);
     }
 }
@@ -162,12 +161,10 @@ fn sema_outcomes_round_trip_through_nota() {
 #[test]
 fn sema_observation_round_trips_through_nota() {
     let observation = SemaObservation::new(SemaOperation::Subscribe, SemaOutcome::Subscribed);
-    let mut encoder = Encoder::new();
-    observation.encode(&mut encoder).expect("encode");
-    let encoded = encoder.into_string();
-
-    let mut decoder = Decoder::new(&encoded);
-    let decoded = SemaObservation::decode(&mut decoder).expect("decode");
+    let encoded = observation.to_nota();
+    let decoded = NotaSource::new(&encoded)
+        .parse::<SemaObservation>()
+        .expect("decode");
     assert_eq!(decoded, observation);
 }
 

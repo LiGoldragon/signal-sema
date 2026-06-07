@@ -5,7 +5,7 @@
 //! rkyv archive layout, or the operation-class mapping, exactly one
 //! of these tests breaks and names the variant that drifted.
 
-use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
+use nota_next::{NotaEncode, NotaSource};
 use rkyv::rancor::Error as RkyvError;
 use signal_sema::{ArchivedSemaOperation, OperationClass, SemaOperation, ToSemaOperation};
 
@@ -108,13 +108,12 @@ fn sema_operation_projects_to_itself() {
 #[test]
 fn sema_operations_round_trip_through_nota() {
     for operation in operations() {
-        let mut encoder = Encoder::new();
-        operation.encode(&mut encoder).expect("encode");
-        let encoded = encoder.into_string();
+        let encoded = operation.to_nota();
         assert_eq!(encoded, operation.as_record_head());
 
-        let mut decoder = Decoder::new(&encoded);
-        let decoded = SemaOperation::decode(&mut decoder).expect("decode");
+        let decoded = NotaSource::new(&encoded)
+            .parse::<SemaOperation>()
+            .expect("decode");
         assert_eq!(decoded, operation);
     }
 }

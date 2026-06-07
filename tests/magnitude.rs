@@ -1,6 +1,6 @@
 //! Falsifiable witnesses for the ordered [`Magnitude`] vocabulary.
 
-use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
+use nota_next::{NotaEncode, NotaSource};
 use rkyv::rancor::Error as RkyvError;
 use signal_sema::{ArchivedMagnitude, Magnitude};
 
@@ -47,21 +47,19 @@ fn magnitude_record_heads_are_stable() {
 #[test]
 fn magnitudes_round_trip_through_nota() {
     for magnitude in magnitudes() {
-        let mut encoder = Encoder::new();
-        magnitude.encode(&mut encoder).expect("encode");
-        let encoded = encoder.into_string();
+        let encoded = magnitude.to_nota();
         assert_eq!(encoded, magnitude.as_record_head());
 
-        let mut decoder = Decoder::new(&encoded);
-        let decoded = Magnitude::decode(&mut decoder).expect("decode");
+        let decoded = NotaSource::new(&encoded)
+            .parse::<Magnitude>()
+            .expect("decode");
         assert_eq!(decoded, magnitude);
     }
 }
 
 #[test]
 fn magnitude_nota_rejects_unknown_head() {
-    let mut decoder = Decoder::new("VeryMedium");
-    assert!(Magnitude::decode(&mut decoder).is_err());
+    assert!(NotaSource::new("VeryMedium").parse::<Magnitude>().is_err());
 }
 
 #[test]

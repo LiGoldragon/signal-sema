@@ -13,7 +13,7 @@
 //! value). A concrete value is encoded as the value itself —
 //! [`PatternField`] is transparent over [`PatternField::Match`].
 
-use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode, Result, Token};
+use nota_next::{Block, Delimiter, NotaBlock, NotaDecode, NotaDecodeError, NotaEncode};
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 
 /// Marker for a position that captures the matched value into the
@@ -22,16 +22,23 @@ use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 pub struct Bind;
 
 impl NotaEncode for Bind {
-    fn encode(&self, encoder: &mut Encoder) -> Result<()> {
-        encoder.start_record("Bind")?;
-        encoder.end_record()
+    fn to_nota(&self) -> String {
+        Delimiter::Parenthesis.wrap(["Bind".to_owned()])
     }
 }
 
 impl NotaDecode for Bind {
-    fn decode(decoder: &mut Decoder<'_>) -> Result<Self> {
-        decoder.expect_record_head("Bind")?;
-        decoder.expect_record_end()?;
+    fn from_nota_block(block: &Block) -> Result<Self, NotaDecodeError> {
+        let children = NotaBlock::new(block).expect_children(Delimiter::Parenthesis, "Bind", 1)?;
+        let head = children[0]
+            .demote_to_string()
+            .ok_or(NotaDecodeError::ExpectedAtom { type_name: "Bind" })?;
+        if head != "Bind" {
+            return Err(NotaDecodeError::UnknownVariant {
+                enum_name: "Bind",
+                variant: head.to_owned(),
+            });
+        }
         Ok(Self)
     }
 }
@@ -42,16 +49,26 @@ impl NotaDecode for Bind {
 pub struct Wildcard;
 
 impl NotaEncode for Wildcard {
-    fn encode(&self, encoder: &mut Encoder) -> Result<()> {
-        encoder.start_record("Wildcard")?;
-        encoder.end_record()
+    fn to_nota(&self) -> String {
+        Delimiter::Parenthesis.wrap(["Wildcard".to_owned()])
     }
 }
 
 impl NotaDecode for Wildcard {
-    fn decode(decoder: &mut Decoder<'_>) -> Result<Self> {
-        decoder.expect_record_head("Wildcard")?;
-        decoder.expect_record_end()?;
+    fn from_nota_block(block: &Block) -> Result<Self, NotaDecodeError> {
+        let children =
+            NotaBlock::new(block).expect_children(Delimiter::Parenthesis, "Wildcard", 1)?;
+        let head = children[0]
+            .demote_to_string()
+            .ok_or(NotaDecodeError::ExpectedAtom {
+                type_name: "Wildcard",
+            })?;
+        if head != "Wildcard" {
+            return Err(NotaDecodeError::UnknownVariant {
+                enum_name: "Wildcard",
+                variant: head.to_owned(),
+            });
+        }
         Ok(Self)
     }
 }
@@ -76,33 +93,28 @@ pub enum PatternField<T> {
 }
 
 impl<T: NotaEncode> NotaEncode for PatternField<T> {
-    fn encode(&self, encoder: &mut Encoder) -> Result<()> {
+    fn to_nota(&self) -> String {
         match self {
-            Self::Wildcard => Wildcard.encode(encoder),
-            Self::Bind => Bind.encode(encoder),
-            Self::Match(value) => value.encode(encoder),
+            Self::Wildcard => Wildcard.to_nota(),
+            Self::Bind => Bind.to_nota(),
+            Self::Match(value) => value.to_nota(),
         }
     }
 }
 
 impl<T: NotaDecode> NotaDecode for PatternField<T> {
-    fn decode(decoder: &mut Decoder<'_>) -> Result<Self> {
-        match decoder.peek_token()? {
-            Some(Token::LParen) => {
-                let head = decoder.peek_record_head()?;
-                match head.as_str() {
-                    "Bind" => {
-                        let _marker = Bind::decode(decoder)?;
-                        Ok(Self::Bind)
-                    }
-                    "Wildcard" => {
-                        let _marker = Wildcard::decode(decoder)?;
-                        Ok(Self::Wildcard)
-                    }
-                    _ => Ok(Self::Match(T::decode(decoder)?)),
+    fn from_nota_block(block: &Block) -> Result<Self, NotaDecodeError> {
+        if let Some(children) = block.as_delimited(Delimiter::Parenthesis)
+            && let Some(head) = children.first().and_then(Block::demote_to_string)
+        {
+            match head {
+                "Bind" => return Bind::from_nota_block(block).map(|_| Self::Bind),
+                "Wildcard" => {
+                    return Wildcard::from_nota_block(block).map(|_| Self::Wildcard);
                 }
+                _ => {}
             }
-            _ => Ok(Self::Match(T::decode(decoder)?)),
         }
+        T::from_nota_block(block).map(Self::Match)
     }
 }

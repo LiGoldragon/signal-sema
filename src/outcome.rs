@@ -4,7 +4,7 @@
 //! component-local effects. [`SemaOutcome`] is the universal,
 //! payloadless classification of those effects for observation.
 
-use nota_codec::{NotaEnum, NotaRecord};
+use nota_next::{NotaDecode, NotaEncode};
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 
 use crate::{SemaOperation, ToSemaOperation};
@@ -15,7 +15,17 @@ use crate::{SemaOperation, ToSemaOperation};
 /// events carry those details separately; this enum classifies what
 /// happened in the broad workspace vocabulary.
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub enum SemaOutcome {
     /// A new typed fact / event / row was appended.
@@ -93,7 +103,16 @@ impl ToSemaOutcome for SemaOutcome {
 /// Universal observation label produced from a component command and
 /// the effect it caused.
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, Copy, PartialEq, Eq,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
 )]
 pub struct SemaObservation {
     pub operation: SemaOperation,

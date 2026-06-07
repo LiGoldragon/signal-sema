@@ -4,7 +4,7 @@
 //! that component-local executable commands project into for generic
 //! observation.
 
-use nota_codec::NotaEnum;
+use nota_next::{NotaDecode, NotaEncode};
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 
 /// The closed operation classification set for typed state actions.
@@ -13,7 +13,17 @@ use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 /// own executable command records and project them into this enum
 /// for observation and filtering.
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub enum SemaOperation {
     /// Insert or append a typed record.
@@ -116,7 +126,17 @@ impl ToSemaOperation for SemaOperation {
 /// state. The classes are stable; new Sema operations declare their
 /// class as part of their definition.
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub enum OperationClass {
     /// Transactional change to typed-record state. `Assert`,
