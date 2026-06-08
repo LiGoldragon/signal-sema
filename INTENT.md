@@ -74,8 +74,10 @@ per-component schema imports rather than re-declaring.
   `IntentCertainty` that ties the universal scale to one domain.
 - Type names do not restate the `Sema` or `Signal` namespace; the domain
   is implicit.
-- All owned records are rkyv-archivable and NOTA-encodable, with
-  round-trip witnesses in `tests/`.
+- All owned records are rkyv-archivable in the default binary library.
+  NOTA encode/decode is an explicit `nota-text` feature for human/agent
+  edges and text witnesses; production daemon dependency trees must be
+  able to use `signal-sema` without compiling a NOTA parser.
 
 ## Non-ownership
 

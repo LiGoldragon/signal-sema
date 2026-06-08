@@ -3,22 +3,13 @@
 //! [`Magnitude`] names ordered qualitative strength without carrying
 //! component-domain payloads.
 
-use nota_next::{NotaDecode, NotaEncode};
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 
 /// Ordered qualitative magnitude, from zero through maximum.
-#[derive(
-    Archive,
-    RkyvSerialize,
-    RkyvDeserialize,
-    NotaEncode,
-    NotaDecode,
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Hash,
+#[derive(Archive, RkyvSerialize, RkyvDeserialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(
+    feature = "nota-text",
+    derive(nota_next::NotaEncode, nota_next::NotaDecode)
 )]
 #[repr(u8)]
 pub enum Magnitude {

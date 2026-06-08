@@ -13,6 +13,7 @@
 //! value). A concrete value is encoded as the value itself —
 //! [`PatternField`] is transparent over [`PatternField::Match`].
 
+#[cfg(feature = "nota-text")]
 use nota_next::{Block, Delimiter, NotaBlock, NotaDecode, NotaDecodeError, NotaEncode};
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 
@@ -21,12 +22,14 @@ use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Bind;
 
+#[cfg(feature = "nota-text")]
 impl NotaEncode for Bind {
     fn to_nota(&self) -> String {
         Delimiter::Parenthesis.wrap(["Bind".to_owned()])
     }
 }
 
+#[cfg(feature = "nota-text")]
 impl NotaDecode for Bind {
     fn from_nota_block(block: &Block) -> Result<Self, NotaDecodeError> {
         let children = NotaBlock::new(block).expect_children(Delimiter::Parenthesis, "Bind", 1)?;
@@ -48,12 +51,14 @@ impl NotaDecode for Bind {
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Wildcard;
 
+#[cfg(feature = "nota-text")]
 impl NotaEncode for Wildcard {
     fn to_nota(&self) -> String {
         Delimiter::Parenthesis.wrap(["Wildcard".to_owned()])
     }
 }
 
+#[cfg(feature = "nota-text")]
 impl NotaDecode for Wildcard {
     fn from_nota_block(block: &Block) -> Result<Self, NotaDecodeError> {
         let children =
@@ -92,6 +97,7 @@ pub enum PatternField<T> {
     Match(T),
 }
 
+#[cfg(feature = "nota-text")]
 impl<T: NotaEncode> NotaEncode for PatternField<T> {
     fn to_nota(&self) -> String {
         match self {
@@ -102,6 +108,7 @@ impl<T: NotaEncode> NotaEncode for PatternField<T> {
     }
 }
 
+#[cfg(feature = "nota-text")]
 impl<T: NotaDecode> NotaDecode for PatternField<T> {
     fn from_nota_block(block: &Block) -> Result<Self, NotaDecodeError> {
         if let Some(children) = block.as_delimited(Delimiter::Parenthesis)

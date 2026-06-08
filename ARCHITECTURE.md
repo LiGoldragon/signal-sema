@@ -50,9 +50,12 @@ primary workspace:
   payloadless variants only; never carries component event payloads.
 - `SemaObservation` joins one `SemaOperation` with one `SemaOutcome`;
   it does not carry timing, sequence, or component payload data.
-- `SemaOperation` is rkyv-archivable and NOTA-encodable.
-- `SemaOutcome` and `SemaObservation` are rkyv-archivable and
-  NOTA-encodable.
+- `SemaOperation` is rkyv-archivable in the default binary library;
+  NOTA encoding/decoding is available only under the `nota-text`
+  feature.
+- `SemaOutcome` and `SemaObservation` are rkyv-archivable in the
+  default binary library; NOTA encoding/decoding is available only
+  under the `nota-text` feature.
 - `Magnitude` currently encodes the eight ordered qualitative
   strength rungs from `Zero` through `Maximum`; `Zero` is the
   policy-neutral bottom rung for "no signal" / withdrawn strength.

@@ -5,6 +5,7 @@
 //! rkyv archive layout, or the operation-class mapping, exactly one
 //! of these tests breaks and names the variant that drifted.
 
+#[cfg(feature = "nota-text")]
 use nota_next::{NotaEncode, NotaSource};
 use rkyv::rancor::Error as RkyvError;
 use signal_sema::{ArchivedSemaOperation, OperationClass, SemaOperation, ToSemaOperation};
@@ -106,6 +107,7 @@ fn sema_operation_projects_to_itself() {
 }
 
 #[test]
+#[cfg(feature = "nota-text")]
 fn sema_operations_round_trip_through_nota() {
     for operation in operations() {
         let encoded = operation.to_nota();

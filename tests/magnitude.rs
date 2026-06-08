@@ -1,5 +1,6 @@
 //! Falsifiable witnesses for the ordered [`Magnitude`] vocabulary.
 
+#[cfg(feature = "nota-text")]
 use nota_next::{NotaEncode, NotaSource};
 use rkyv::rancor::Error as RkyvError;
 use signal_sema::{ArchivedMagnitude, Magnitude};
@@ -45,6 +46,7 @@ fn magnitude_record_heads_are_stable() {
 }
 
 #[test]
+#[cfg(feature = "nota-text")]
 fn magnitudes_round_trip_through_nota() {
     for magnitude in magnitudes() {
         let encoded = magnitude.to_nota();
@@ -58,6 +60,7 @@ fn magnitudes_round_trip_through_nota() {
 }
 
 #[test]
+#[cfg(feature = "nota-text")]
 fn magnitude_nota_rejects_unknown_head() {
     assert!(NotaSource::new("VeryMedium").parse::<Magnitude>().is_err());
 }
