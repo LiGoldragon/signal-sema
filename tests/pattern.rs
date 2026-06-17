@@ -87,17 +87,15 @@ fn pattern_field_string_wildcard_emits_wildcard_record() {
 #[test]
 #[cfg(feature = "nota-text")]
 fn pattern_field_string_match_emits_bare_when_camel_case() {
-    // Strings always emit as bracket strings under nota-next.
     let pattern: PatternField<String> = PatternField::Match("alice".into());
-    assert_eq!(encode(&pattern), "[alice]");
+    assert_eq!(encode(&pattern), "alice");
 }
 
 #[test]
 #[cfg(feature = "nota-text")]
-fn pattern_field_string_match_emits_bracket_string_for_pascal_case() {
-    // PascalCase content at a String position emits as a bracket string.
+fn pattern_field_string_match_emits_bare_when_pascal_case() {
     let pattern: PatternField<String> = PatternField::Match("User".into());
-    assert_eq!(encode(&pattern), "[User]");
+    assert_eq!(encode(&pattern), "User");
 }
 
 #[test]
@@ -123,8 +121,8 @@ fn pattern_field_string_round_trip_wildcard() {
 
 #[test]
 #[cfg(feature = "nota-text")]
-fn pattern_field_string_round_trip_match_quoted() {
-    let decoded: PatternField<String> = decode("[User]");
+fn pattern_field_string_round_trip_match_pascal_case() {
+    let decoded: PatternField<String> = decode("User");
     assert_eq!(decoded, PatternField::Match("User".into()));
 }
 
@@ -132,7 +130,7 @@ fn pattern_field_string_round_trip_match_quoted() {
 #[cfg(feature = "nota-text")]
 fn pattern_field_string_round_trip_match_bare_ident() {
     // Bare camelCase / kebab-case content decodes as the Match
-    // payload. Encoding canonicalises it back to a bracket string.
+    // payload and remains bare when re-encoded.
     let decoded: PatternField<String> = decode("alice");
     assert_eq!(decoded, PatternField::Match("alice".into()));
 }
