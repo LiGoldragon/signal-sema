@@ -1,7 +1,7 @@
 //! Falsifiable witnesses for the ordered [`Magnitude`] vocabulary.
 
 #[cfg(feature = "nota-text")]
-use nota_next::{NotaEncode, NotaSource};
+use nota::{NotaEncode, NotaSource};
 use rkyv::rancor::Error as RkyvError;
 use signal_sema::{ArchivedMagnitude, Magnitude};
 

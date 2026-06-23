@@ -14,7 +14,7 @@ use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(
     feature = "nota-text",
-    derive(nota_next::NotaEncode, nota_next::NotaDecode)
+    derive(nota::NotaEncode, nota::NotaDecode)
 )]
 pub enum SemaOperation {
     /// Insert or append a typed record.
@@ -119,7 +119,7 @@ impl ToSemaOperation for SemaOperation {
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(
     feature = "nota-text",
-    derive(nota_next::NotaEncode, nota_next::NotaDecode)
+    derive(nota::NotaEncode, nota::NotaDecode)
 )]
 pub enum OperationClass {
     /// Transactional change to typed-record state. `Assert`,

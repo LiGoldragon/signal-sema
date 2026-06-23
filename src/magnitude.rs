@@ -9,7 +9,7 @@ use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(
     feature = "nota-text",
-    derive(nota_next::NotaEncode, nota_next::NotaDecode)
+    derive(nota::NotaEncode, nota::NotaDecode)
 )]
 #[repr(u8)]
 pub enum Magnitude {

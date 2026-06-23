@@ -16,7 +16,7 @@ use crate::{SemaOperation, ToSemaOperation};
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(
     feature = "nota-text",
-    derive(nota_next::NotaEncode, nota_next::NotaDecode)
+    derive(nota::NotaEncode, nota::NotaDecode)
 )]
 pub enum SemaOutcome {
     /// A new typed fact / event / row was appended.
@@ -96,7 +96,7 @@ impl ToSemaOutcome for SemaOutcome {
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(
     feature = "nota-text",
-    derive(nota_next::NotaEncode, nota_next::NotaDecode)
+    derive(nota::NotaEncode, nota::NotaDecode)
 )]
 pub struct SemaObservation {
     pub operation: SemaOperation,
