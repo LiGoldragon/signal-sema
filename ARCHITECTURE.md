@@ -6,6 +6,12 @@ observation and introspection, plus the read-algebra pattern
 primitives, qualitative magnitude vocabulary, and typed identity
 values components carry inside their own typed records.
 
+## Direction
+
+`signal-sema` is the home of **Layer 3** in the three-layer model: the universal *payloadless* class labels (`Assert`, `Mutate`, `Retract`, `Match`, `Subscribe`, `Validate`) used for cross-component observation and introspection. Daemons project their Component Commands and effects to Sema classes via `ToSemaOperation` and `ToSemaOutcome`; observers filter cross-component activity by class without knowing per-daemon command payloads. `signal-sema` is the universal vocabulary substrate every per-component schema imports rather than re-declaring.
+
+`SemaOperation` and `SemaOutcome` are payloadless — variants never carry executable payloads or component event payloads. `Magnitude` is a closed ordered scale; **the vocabulary is the schema, and consumption is per-component policy** — never collapse the wire vocabulary to fit a current consumption policy. `signal-sema` does not depend on `signal-frame`; the frame layer and the Sema classification vocabulary are separate concerns.
+
 The classification vocabulary is the third layer of the three-layer
 model affirmed 2026-05-20 (per
 `reports/designer/246-v4-bundled-fix-deep-design-with-examples.md`
